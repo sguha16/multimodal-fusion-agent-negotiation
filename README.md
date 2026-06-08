@@ -239,27 +239,76 @@ Expect ~3-5 minutes per scenario (4 agent LLM calls × 30-45s + 3 judge LLM call
 - **Judge reasoning**: `peak=1.1e+10` vs `noise=3.1e+07`, doppler -1.0mps indicating motion, camera `patch_score=0.079`
 - **Result**: Fusion uses camera only (radar degraded for overall strategy)
 
-### Sample Negotiation Transcript (Camera Noise Scenario)
+### Sample Full Negotiation Transcript (Camera Noise Scenario)
+
+3 disputed radar-only objects. Camera degraded (conf=0.31, motion_blur, 0 YOLO detections). Radar healthy (conf=1.00).
 
 ```
+==================================================
   OBJECT 0
-  --------------------------------------------------
-  [R1] Radar: claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+==================================================
+  [R1] Radar:  claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
     "The strong radar return (peak power: 1.4e+10) and high active cell count (1344/4096) suggest a real object is present at this range. The velocity measurement is unreliable, but the motion state indicates it's stationary."
   [R1] Camera: claims={'present': False, 'class_is_vehicle': None, 'texture_consistent': None}
     "The grayscale patch lacks distinct edges or texture structures, and the Sobel gradient is relatively flat (min=0.0, max=539.2). The BGR color values at center are mixed, but do not form a coherent pattern."
-  [R2] Radar: claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
-    "Object 0 is present with reliable range measurement of 8.2m, and a high peak power value (1.4e+10) indicating a strong radar return. The noise floor (2.9e+07) is relatively low compared to the peak power, suggesting good signal quality."
+  [R2] Radar:  claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+    "Object 0 is present with reliable range measurement of 8.2m, and a high peak power value (1.4e+10) indicating a strong radar return. The noise floor (2.9e+07) is relatively low compared to the peak power, suggesting good signal quality. The Doppler spread is zero, consistent with a stationary object."
   [R2] Camera: claims={'present': False, 'class_is_vehicle': None}
-    "The grayscale patch is mostly composed of bright pixels with little to no texture or structure, suggesting noise rather than a real object. The Sobel gradient magnitude is relatively low (min: 0.0, max: 539.2), indicating minimal edge information."
+    "Although the radar detected an object at this location, our camera data shows no evidence of a detectable object. The grayscale patch is mostly composed of bright pixels with little to no texture or structure, suggesting noise rather than a real object. The Sobel gradient magnitude is relatively low (min: 0.0, max: 539.2), indicating minimal edge information."
 
-  --- Judge ---
-  active conditions: {'motion_blur': 'medium'}
-  Verdict: confirmed
-  Reasoning: The radar's raw data indicates a strong return with a cube peak of 1.4e+10, well above the noise floor of 2.9e+07. The cluster size is significant at 38 points, suggesting a real object. The camera's raw data shows a uniform grayscale patch with low edge density and no distinct texture or structure.
+  [Judge] active conditions: {'motion_blur': 'medium'}
+    Object 0: verdict=confirmed
+    Reasoning: The radar's raw data indicates a strong return with a cube peak of
+    1.4e+10, well above the noise floor of 2.9e+07. The cluster size is significant
+    at 38 points, suggesting a real object. Additionally, the Doppler spread is zero,
+    consistent with a stationary object. In contrast, the camera's raw data shows a
+    uniform grayscale patch with low edge density and no distinct texture or structure.
+
+==================================================
+  OBJECT 1
+==================================================
+  [R1] Radar:  claims={'present': True, 'range_reliable': False, 'velocity_reliable': True, 'class_is_vehicle': None}
+    "The radar data shows a real object (peak power: 1.1e+10) with a reliable velocity measurement (-1.0mps). However, the range estimate is uncertain due to the relatively low mean cube power (1.7e+08) and high noise floor (3.1e+07)."
+  [R1] Camera: claims={'present': False, 'class_is_vehicle': None, 'texture_consistent': None}
+    "The Sobel gradient is relatively high (min=0.0, max=510.0), indicating some texture or edge structure. However, the grayscale patch values are not distinct or coherent, and the BGR color values at center do not suggest a vehicle-like appearance."
+  [R2] Radar:  claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+    "Object 1 is present with reliable range measurement of 8.5m, and a moderate peak power value (1.1e+10) indicating a radar return that is stronger than the noise floor (3.1e+07). The Doppler spread (-1.0mps) indicates motion away from the sensor, but the signal quality is sufficient to identify the object as present."
+  [R2] Camera: claims={'present': False, 'class_is_vehicle': None}
+    "Similar to Object 0, our camera data does not support the presence of an object at this location. The grayscale patch has a mixture of bright and dark pixels with no clear texture or structure, suggesting clutter rather than a real object."
+
+  [Judge] active conditions: {'motion_blur': 'medium'}
+    Object 1: verdict=confirmed
+    Reasoning: Based on the radar's RAW DATA, I find that the cube peak is well
+    above the noise floor (peak: 1.1e+10, noise floor: 3.1e+07), indicating a
+    strong and reliable signal. The cluster size of 44 points suggests a consistent
+    object signature. Dopplers are moderate (-1.0mps) but do not contradict the
+    object's presence. With high point_score (1.000) and cube_power_ratio (1.000),
+    I trust radar's evidence. Camera's RAW DATA shows a uniform grayscale patch
+    with no clear edge structure or texture, patch_score (0.367) and
+    edge_density (0.367).
+
+==================================================
+  OBJECT 17
+==================================================
+  [R1] Radar:  claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+    "The strong radar return (peak power: 1.6e+10) and low noise floor (1.7e+08) indicate a real object is present at this range. The velocity measurement is unreliable, but the motion state indicates it's stationary."
+  [R1] Camera: claims={'present': False, 'class_is_vehicle': None, 'texture_consistent': None}
+    "The grayscale patch lacks distinct edges or texture structures, and the Sobel gradient is relatively low (min=0.0, max=470.0). The BGR color values at center are not coherent or vehicle-like."
+  [R2] Radar:  claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+    "Object 17 is present with reliable range measurement of 35.0m, and a high peak power value (1.6e+10) indicating a strong radar return. The noise floor (1.7e+08) is relatively low compared to the peak power, suggesting good signal quality."
+  [R2] Camera: claims={'present': False}
+    "Our camera data indicates that this location may be contaminated with noise or shadow, as the grayscale patch has a mix of dark and bright pixels with no clear structure. The Sobel gradient magnitude is relatively low (min: 0.0, max: 470.0), suggesting little to no edge information."
+
+  [Judge] active conditions: {'motion_blur': 'medium'}
+    Object 17: verdict=confirmed
+    Reasoning: The radar's raw data shows a high cube peak of 1.6e+10, well above
+    the noise floor of 1.7e+08. The point_score and cube_power_ratio both indicate
+    strong evidence for this object. Camera's raw data lacks distinct edge structure
+    (sobel_mean) and has uniform grayscale values (gray_std). Camera confidence is
+    low due to motion blur. Radar's evidence is more trustworthy.
 ```
 
-Each disputed object shows Round 1 (initial argument), Round 2 (counter-argument referencing opponent's data), and the judge verdict with chain-of-thought reasoning referencing specific values from the deterministic raw data section.
+Each disputed object shows Round 1 (initial argument), Round 2 (counter-argument), and the judge verdict with chain-of-thought reasoning referencing specific values from the deterministic raw data section. In this scenario, all 3 were **confirmed** (trust radar) because the camera was degraded by noise while radar remained healthy.
 
 ---
 
