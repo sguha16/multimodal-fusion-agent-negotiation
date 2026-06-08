@@ -192,10 +192,10 @@ ollama pull nomic-embed-text
 
 ### Paths (configurable in scripts)
 ```python
-SEQ_PATH = r"C:\path\to\RECORD@2020-11-21_11.54.31"
-CALIB_PATH = r"C:\path\to\CalibrationTable.npy"
-LABELS_PATH = r"C:\path\to\labels_CVPR.csv"
-CAMERA_CALIB = r"C:\path\to\camera_calib.npy"
+SEQ_PATH = "/path/to/RECORD@2020-11-21_11.54.31"
+CALIB_PATH = "/path/to/CalibrationTable.npy"
+LABELS_PATH = "/path/to/labels_CVPR.csv"
+CAMERA_CALIB = "/path/to/camera_calib.npy"
 ```
 
 ### Important
@@ -238,6 +238,28 @@ Expect ~3-5 minutes per scenario (4 agent LLM calls × 30-45s + 3 judge LLM call
 - **Negotiation**: all 3 disputes → **confirmed** (radar evidence still strong despite degradation)
 - **Judge reasoning**: `peak=1.1e+10` vs `noise=3.1e+07`, doppler -1.0mps indicating motion, camera `patch_score=0.079`
 - **Result**: Fusion uses camera only (radar degraded for overall strategy)
+
+### Sample Negotiation Transcript (Camera Noise Scenario)
+
+```
+  OBJECT 0
+  --------------------------------------------------
+  [R1] Radar: claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+    "The strong radar return (peak power: 1.4e+10) and high active cell count (1344/4096) suggest a real object is present at this range. The velocity measurement is unreliable, but the motion state indicates it's stationary."
+  [R1] Camera: claims={'present': False, 'class_is_vehicle': None, 'texture_consistent': None}
+    "The grayscale patch lacks distinct edges or texture structures, and the Sobel gradient is relatively flat (min=0.0, max=539.2). The BGR color values at center are mixed, but do not form a coherent pattern."
+  [R2] Radar: claims={'present': True, 'range_reliable': True, 'velocity_reliable': False, 'class_is_vehicle': None}
+    "Object 0 is present with reliable range measurement of 8.2m, and a high peak power value (1.4e+10) indicating a strong radar return. The noise floor (2.9e+07) is relatively low compared to the peak power, suggesting good signal quality."
+  [R2] Camera: claims={'present': False, 'class_is_vehicle': None}
+    "The grayscale patch is mostly composed of bright pixels with little to no texture or structure, suggesting noise rather than a real object. The Sobel gradient magnitude is relatively low (min: 0.0, max: 539.2), indicating minimal edge information."
+
+  --- Judge ---
+  active conditions: {'motion_blur': 'medium'}
+  Verdict: confirmed
+  Reasoning: The radar's raw data indicates a strong return with a cube peak of 1.4e+10, well above the noise floor of 2.9e+07. The cluster size is significant at 38 points, suggesting a real object. The camera's raw data shows a uniform grayscale patch with low edge density and no distinct texture or structure.
+```
+
+Each disputed object shows Round 1 (initial argument), Round 2 (counter-argument referencing opponent's data), and the judge verdict with chain-of-thought reasoning referencing specific values from the deterministic raw data section.
 
 ---
 
