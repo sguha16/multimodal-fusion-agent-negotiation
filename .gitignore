@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+conda_env.yaml
+
+# Runtime data files
+*.npy
+*.npz
+
+# YOLO model weights
+yolov8n.pt
+yolov8*.pt
+
+# ChromaDB vector store (old RAG)
+fusion_knowledge_base/
+
+# Output visualizations (generated at runtime)
+fused_*.png
+agent_detections.png
+
+# Negotiation reports (generated at runtime)
+negotiation_report_*.txt
+
+# KG visualization (generated at runtime)
+fusion_graph.png
+report.txt
